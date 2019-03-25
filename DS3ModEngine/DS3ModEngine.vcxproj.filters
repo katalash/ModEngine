@@ -1,0 +1,148 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\DINPUT8">
+      <UniqueIdentifier>{6b81be91-6050-4f97-a206-fa7052baa030}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\MinHook">
+      <UniqueIdentifier>{07108688-3f12-4861-a3c7-717c193ea76b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HideThreadFromDebugger">
+      <UniqueIdentifier>{bc88b517-c792-443d-b583-af5ab2e26d9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\LooseParams">
+      <UniqueIdentifier>{26c3c0d7-66a4-4bcc-8dc7-ecad91a55db4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\NetworkBlocker">
+      <UniqueIdentifier>{9986e3a8-47a3-493b-ab02-a00cec935b0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ModLoader">
+      <UniqueIdentifier>{9b98299d-e6ad-4a1c-b1c0-3e7b2de9126a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameplayPatcher">
+      <UniqueIdentifier>{dbdb977e-8118-48a5-b597-f4b8f6a4e811}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="dinput8\dinput.h">
+      <Filter>Source Files\DINPUT8</Filter>
+    </ClInclude>
+    <ClInclude Include="dinput8\dinputWrapper.h">
+      <Filter>Source Files\DINPUT8</Filter>
+    </ClInclude>
+    <ClInclude Include="MinHook\include\MinHook.h">
+      <Filter>Source Files\MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="MinHook\src\buffer.h">
+      <Filter>Source Files\MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="MinHook\src\trampoline.h">
+      <Filter>Source Files\MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="MinHook\src\HDE\hde32.h">
+      <Filter>Source Files\MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="MinHook\src\HDE\hde64.h">
+      <Filter>Source Files\MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="MinHook\src\HDE\pstdint.h">
+      <Filter>Source Files\MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="MinHook\src\HDE\table32.h">
+      <Filter>Source Files\MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="MinHook\src\HDE\table64.h">
+      <Filter>Source Files\MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="HideThreadFromDebugger.h">
+      <Filter>Source Files\HideThreadFromDebugger</Filter>
+    </ClInclude>
+    <ClInclude Include="dllmain.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LooseParams.h">
+      <Filter>Source Files\LooseParams</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkBlocker.h">
+      <Filter>Source Files\NetworkBlocker</Filter>
+    </ClInclude>
+    <ClInclude Include="ModLoader.h">
+      <Filter>Source Files\ModLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="GameplayPatcher.h">
+      <Filter>Source Files\GameplayPatcher</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AOBScanner.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="dinput8\dinput8.def">
+      <Filter>Source Files\DINPUT8</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dinput8\dinputWrapper.cpp">
+      <Filter>Source Files\DINPUT8</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MinHook\src\buffer.c">
+      <Filter>Source Files\MinHook</Filter>
+    </ClCompile>
+    <ClCompile Include="MinHook\src\hook.c">
+      <Filter>Source Files\MinHook</Filter>
+    </ClCompile>
+    <ClCompile Include="MinHook\src\trampoline.c">
+      <Filter>Source Files\MinHook</Filter>
+    </ClCompile>
+    <ClCompile Include="MinHook\src\HDE\hde32.c">
+      <Filter>Source Files\MinHook</Filter>
+    </ClCompile>
+    <ClCompile Include="MinHook\src\HDE\hde64.c">
+      <Filter>Source Files\MinHook</Filter>
+    </ClCompile>
+    <ClCompile Include="HideThreadFromDebugger.cpp">
+      <Filter>Source Files\HideThreadFromDebugger</Filter>
+    </ClCompile>
+    <ClCompile Include="LooseParams.cpp">
+      <Filter>Source Files\LooseParams</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkBlocker.cpp">
+      <Filter>Source Files\NetworkBlocker</Filter>
+    </ClCompile>
+    <ClCompile Include="ModLoader.cpp">
+      <Filter>Source Files\ModLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="GameplayPatcher.cpp">
+      <Filter>Source Files\GameplayPatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AOBScanner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="_VirtualToArchivePathHook.asm">
+      <Filter>Source Files\ModLoader</Filter>
+    </MASM>
+  </ItemGroup>
+</Project>
