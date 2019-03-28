@@ -1,6 +1,7 @@
 #include "dllmain.h"
 #include "Game.h"
 #include <iostream>
+#include <strsafe.h>
 
 // Export DINPUT8
 tDirectInput8Create oDirectInput8Create;
@@ -44,6 +45,15 @@ BOOL CheckSekiroVersion()
 	// 1.02 unpacked = 65682312
 	if (size == (long)65682008 || size == (long)65682312)
 	{
+		// Check for CODEX crack
+		wchar_t buffer2[MAX_PATH];
+		GetCurrentDirectoryW(MAX_PATH * 2, buffer2);
+		StringCchCatW(buffer2, MAX_PATH, L"\\sekiro.cdx");
+		if (GetFileAttributesW(buffer2) != INVALID_FILE_ATTRIBUTES)
+		{
+			// CODEX crack detected
+			return false;
+		}
 		return true;
 	}
 	else
@@ -112,7 +122,7 @@ BOOL ApplyHooks()
 
 void LoadPlugins()
 {
-	LoadLibraryW(L".\\plugins\\SekiroTutorialRemover.dll");
+	//LoadLibraryW(L".\\plugins\\SekiroTutorialRemover.dll");
 }
 
 // SteamAPI hook

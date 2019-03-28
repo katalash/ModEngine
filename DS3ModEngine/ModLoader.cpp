@@ -3,7 +3,10 @@
 #include "AOBScanner.h"
 #include <stdio.h>
 #include <wchar.h>
+#include <Shlwapi.h>
 #include <concurrent_unordered_set.h>
+
+#pragma comment(lib, "shlwapi.lib")
 
 extern bool gDebugLog;
 
@@ -86,21 +89,15 @@ HANDLE WINAPI tCreateFileW(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwSh
 	// Check and see if a subdirectory is attempting to be accessed
 	if (lpFileName != NULL)
 	{
-		wchar_t *gp = NULL;
-		int dirSlashIdx;
-		if (GetGameType() == GAME_DARKSOULS_3)
-		{
-			gp = DS3Path;
-			dirSlashIdx = 19;
-		}
-		else if (GetGameType() == GAME_SEKIRO)
-		{
-			gp = SekiroPath;
-			dirSlashIdx = 6;
-		}
-		const wchar_t *gamepath = wcsstr(lpFileName, gp);
+		wchar_t gp[MAX_PATH + 40];
+		GetCurrentDirectoryW(MAX_PATH, gp);
+
+		const wchar_t *gamepath = StrStrNIW(lpFileName, gp, MAX_PATH);
+		const int dirSlashIdx = lstrlenW(gp) - 1;
+
+		//wprintf(L"Path %s, GP %s, dirSlashIdx %d\r\n", lpFileName, gamepath, dirSlashIdx);
 		 
-		if (gamepath != NULL && gamepath != lpFileName)
+		if (gamepath != NULL && dirSlashIdx > 0)
 		{
 			const wchar_t *gameDirSlash = wcsstr(&gamepath[dirSlashIdx], L"\\");
 			if (gameDirSlash != NULL && gameDirSlash != lpFileName)
@@ -150,7 +147,7 @@ UINT64 tLoadFile(LPVOID arg1, UINT64 arg2)
 		// Check and see if a subdirectory is attempting to be accessed
 		if (path != NULL)
 		{
-			wchar_t *gp = NULL;
+			/*wchar_t *gp = NULL;
 			int dirSlashIdx;
 			if (GetGameType() == GAME_DARKSOULS_3)
 			{
@@ -161,12 +158,20 @@ UINT64 tLoadFile(LPVOID arg1, UINT64 arg2)
 			{
 				gp = SekiroPath;
 				dirSlashIdx = 6;
-			}
-			const wchar_t *gamepath = wcsstr(path, gp);
+			}*/
 
-			if (gamepath != NULL && gamepath != path)
+			wchar_t gp[MAX_PATH+40];
+			GetCurrentDirectoryW(MAX_PATH, gp);
+
+			const wchar_t *gamepath = StrStrNIW(path, gp, MAX_PATH);
+			const int dirSlashIdx = lstrlenW(gp) - 1;
+
+			wprintf(L"Path %s, GP %s, dirSlashIdx %d\r\n", path, gamepath, dirSlashIdx);
+
+			if (gamepath != NULL && dirSlashIdx > 0)
 			{
-				const wchar_t *gameDirSlash = wcsstr(&gamepath[dirSlashIdx], L"\\");
+
+				const wchar_t *gameDirSlash = StrStrNIW(&gamepath[dirSlashIdx], L"\\", MAX_PATH);
 				if (gameDirSlash != NULL && gameDirSlash != path)
 				{
 					// We likely have a game directory path. Attempt to find override files
@@ -208,13 +213,14 @@ UINT64 tLoadFile(LPVOID arg1, UINT64 arg2)
 DWORD64 ReplaceFileLoadPath(DLString *path)
 {
 	// Patch to load loose files
+	wchar_t working[MAX_PATH];
 	if (path->capacity > 7 && path->length >= 6)
 	{
 		if (path->string[0] == L'd' && path->string[1] == L'a' && path->string[2] == L't' && path->string[3] == L'a')
 		{
 			if (gDebugLog)
 			{
-				wprintf(L"[ArchiveHook] Intercepted archive path %s\r\n", path->string);
+				//wprintf(L"[ArchiveHook] Intercepted archive path %s\r\n", path->string);
 			}
 
 			// See if this is already cached
@@ -225,8 +231,8 @@ DWORD64 ReplaceFileLoadPath(DLString *path)
 			// Not cached
 			if (!isOverridden && !isArchived)
 			{
-				wchar_t *working = (wchar_t*)malloc(1024);
-				GetCurrentDirectoryW(1024, working);
+				//wchar_t *working = (wchar_t*)malloc(1024);
+				GetCurrentDirectoryW(MAX_PATH, working);
 				if (gUseModOverride && !gLoadUXMFiles)
 				{
 					lstrcpynW(working + lstrlenW(working), gModDir, lstrlenW(gModDir) + 1);
@@ -258,7 +264,7 @@ DWORD64 ReplaceFileLoadPath(DLString *path)
 					if (gCachePaths)
 						archiveSet.insert(path->string);
 				}
-				free(working);
+				//free(working);
 			}
 
 			if (overr)
@@ -290,8 +296,8 @@ DWORD64 ReplaceFileLoadPath(DLString *path)
 				// Not cached
 				if (!isOverridden && !isArchived)
 				{
-					wchar_t *working = (wchar_t*)malloc(1024);
-					GetCurrentDirectoryW(1024, working);
+					//wchar_t *working = (wchar_t*)malloc(1024);
+					GetCurrentDirectoryW(MAX_PATH, working);
 					if (gUseModOverride && !gLoadUXMFiles)
 					{
 						lstrcpynW(working + lstrlenW(working), gModDir, lstrlenW(gModDir) + 1);
@@ -317,7 +323,7 @@ DWORD64 ReplaceFileLoadPath(DLString *path)
 						if (gCachePaths)
 							archiveSet.insert(path->string);
 					}
-					free(working);
+					//free(working);
 				}
 
 				if (overr)
@@ -406,7 +412,7 @@ BOOL HookModLoader(bool loadUXMFiles, bool useModOverride, bool cachePaths, wcha
 	// Hook the windows file create/open api
 	if (useModOverride && (modOverrideDirectory != NULL))
 	{
-		if (GetGameType() == GAME_SEKIRO)
+		if (0)//GetGameType() == GAME_SEKIRO)
 		{
 			wprintf(L"[ModEngine] Hooking file loading functions\r\n");
 			// Hook the game archive function
