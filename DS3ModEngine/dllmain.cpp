@@ -43,7 +43,8 @@ BOOL CheckSekiroVersion()
 
 	// 1.02 = 65682008
 	// 1.02 unpacked = 65682312
-	if (size == (long)65682008 || size == (long)65682312)
+	// 1.03 = 65688152
+	if (size == (long)65682008 || size == (long)65682312 || size == (long)65688152)
 	{
 		// Check for CODEX crack
 		wchar_t buffer2[MAX_PATH];
@@ -68,13 +69,13 @@ BOOL ApplyHooks()
 	bool saveFilePatch = (GetPrivateProfileIntW(L"savefile", L"useAlternateSaveFile", 1, L".\\modengine.ini") == 1);
 	bool looseParamsPatch = (GetPrivateProfileIntW(L"files", L"loadLooseParams", 0, L".\\modengine.ini") == 1);
 	bool loadUXMFiles = (GetPrivateProfileIntW(L"files", L"loadUXMFiles", 0, L".\\modengine.ini") == 1);
-	bool useModOverride = (GetPrivateProfileIntW(L"files", L"useModOverrideDirectory", 0, L".\\modengine.ini") == 1);
-	bool cachePaths = (GetPrivateProfileIntW(L"files", L"cacheFilePaths", 0, L".\\modengine.ini") == 1);
+	bool useModOverride = (GetPrivateProfileIntW(L"files", L"useModOverrideDirectory", 1, L".\\modengine.ini") == 1);
+	bool cachePaths = (GetPrivateProfileIntW(L"files", L"cacheFilePaths", 1, L".\\modengine.ini") == 1);
 
 	wchar_t *modOverrideDirectory = (wchar_t*)malloc(1000);
 	if (modOverrideDirectory != NULL)
 	{
-		GetPrivateProfileStringW(L"files", L"modOverrideDirectory", L"\\mod", modOverrideDirectory, 500, L".\\modengine.ini");
+		GetPrivateProfileStringW(L"files", L"modOverrideDirectory", L"\\doa", modOverrideDirectory, 500, L".\\modengine.ini");
 	}
 
 	// Bypass HideThreadFromDebugger
@@ -86,7 +87,7 @@ BOOL ApplyHooks()
 	//	throw(0xDEAD0003);
 
 	// Patch for loose params
-	if (GetGameType() == GAME_DARKSOULS_3 && !LooseParamsPatch(saveFilePatch, looseParamsPatch))
+	if (!LooseParamsPatch(saveFilePatch, looseParamsPatch))
 		throw(0xDEAD0003);
 
 	// Block network access
@@ -137,7 +138,7 @@ DWORD64 __cdecl onSteamInit()
 		FILE *stream;
 		freopen_s(&stream, "CONOUT$", "w", stdout);
 		freopen_s(&stream, "CONIN$", "r", stdin);
-		printf("Unsupported version of Sekiro detected. This version of Mod Engine was built for Sekiro 1.02 official steam release, and is not supported with cracks or other versions.\r\nIf Steam updated your game recently, check for the latest mod engine version at https://www.nexusmods.com/sekiro/mods/6.\r\n");
+		printf("Unsupported version of Sekiro detected. This version of Mod Engine was built for Sekiro 1.02-1.03 official steam release, and is not supported with cracks or other versions.\r\nIf Steam updated your game recently, check for the latest mod engine version at https://www.nexusmods.com/sekiro/mods/6.\r\n");
 		printf("\r\nMod Engine will attempt to find the required functions in order to work, but I give no guarantees.\r\nDO NOT ASK ME FOR SUPPORT IF THINGS DON'T WORK PROPERLY.\r\n\r\nPress any key to continue...");
 		int temp;
 		std::cin.ignore();
@@ -190,10 +191,19 @@ BOOL InitInstance(HMODULE hModule)
 	if (MH_Initialize() != MH_OK)
 		throw(0xDEAD0001);
 
-	auto steamApiHwnd = GetModuleHandleW(L"steam_api64.dll");
-	auto initAddr = GetProcAddress(steamApiHwnd, "SteamAPI_Init");
-	MH_CreateHook(initAddr, &onSteamInit, reinterpret_cast<LPVOID*>(&fpSteamInit));
-	MH_EnableHook(initAddr);
+	// Only hook steamapi on Sekiro
+	if (GetGameType() == GAME_SEKIRO || GetGameType() == GAME_DARKSOULS_REMASTERED)
+	{
+		auto steamApiHwnd = GetModuleHandleW(L"steam_api64.dll");
+		auto initAddr = GetProcAddress(steamApiHwnd, "SteamAPI_Init");
+		MH_CreateHook(initAddr, &onSteamInit, reinterpret_cast<LPVOID*>(&fpSteamInit));
+		MH_EnableHook(initAddr);
+	}
+	else
+	{
+		// Just call our would-be steam hook directly since exe isn't Steam DRM protected
+		onSteamInit();
+	}
 
     return true;
 }

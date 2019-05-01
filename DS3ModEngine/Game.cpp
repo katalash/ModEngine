@@ -2,5 +2,5 @@
 
 DSGame GetGameType()
 {
-	return GAME_SEKIRO;
+	return GAME_DARKSOULS_REMASTERED;
 }

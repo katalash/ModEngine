@@ -377,7 +377,7 @@ LPVOID GetLoadFileFunctionAddress()
 // Mod loader hook by katalash
 BOOL HookModLoader(bool loadUXMFiles, bool useModOverride, bool cachePaths, wchar_t *modOverrideDirectory)
 {
-	if (loadUXMFiles || useModOverride)
+	if ((loadUXMFiles || useModOverride) && GetGameType() != GAME_DARKSOULS_REMASTERED)
 	{
 		wprintf(L"[ModEngine] Hooking archive loader functions\r\n");
 		// Hook the game archive function

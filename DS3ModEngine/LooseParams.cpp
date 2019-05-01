@@ -1,4 +1,6 @@
 #include "LooseParams.h"
+#include "Game.h"
+#include "AOBScanner.h"
 #include <stdio.h>
 
 // Patch developed by Pav to load loose params instead of data0
@@ -15,14 +17,20 @@ BOOL LooseParamsPatch(bool saveLocationPatch, bool looseParamPatch)
 	{
 		wprintf(L"[ModEngine] Patching save file location\r\n");
 		// Dumb save file location patch
-		if (!VirtualProtect((LPVOID)0x143a72e9e, 1, PAGE_READWRITE, &oldProtect))
-			return false;
+		//if (!VirtualProtect((LPVOID)0x143a72e9e, 1, PAGE_READWRITE, &oldProtect))
+		//	return false;
 		// Invent the .sl3 format
-		*(char*)0x143a72e9e += 1;
-		VirtualProtect((LPVOID)0x143a72e9e, 1, oldProtect, &oldProtect);
+		//*(char*)0x143a72e9e += 1;
+		//VirtualProtect((LPVOID)0x143a72e9e, 1, oldProtect, &oldProtect);
+		unsigned short scanBytes[3] = { 's', 'l', '2' };
+		unsigned short scanBytes2[5] = { 's', '\0', 'l', '\0', '2' };
+		unsigned char replaceBytes[3] = { 'd', 'o', 'a' };
+		unsigned char replaceBytes2[5] = { 'd', '\0', 'o', '\0', 'a' };
+		AOBScanner::GetSingleton()->FindAndReplace(scanBytes, replaceBytes, 3);
+		AOBScanner::GetSingleton()->FindAndReplace(scanBytes2, replaceBytes2, 5);
 	}
 
-	if (looseParamPatch)
+	if (looseParamPatch && GetGameType() == GAME_DARKSOULS_3)
 	{
 		wprintf(L"[ModEngine] Applying loose param patch\r\n");
 		// Apply patch 1
