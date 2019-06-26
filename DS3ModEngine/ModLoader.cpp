@@ -220,7 +220,7 @@ DWORD64 ReplaceFileLoadPath(DLString *path)
 		{
 			if (gDebugLog)
 			{
-				//wprintf(L"[ArchiveHook] Intercepted archive path %s\r\n", path->string);
+				wprintf(L"[ArchiveHook] Intercepted archive path %s\r\n", path->string);
 			}
 
 			// See if this is already cached
@@ -286,7 +286,7 @@ DWORD64 ReplaceFileLoadPath(DLString *path)
 		{
 			if (path->string[0] == L'g' && path->string[1] == L'a' && path->string[2] == L'm' && path->string[3] == L'e' && path->string[4] == L'_')
 			{
-				wprintf(L"[ArchiveHook] Intercepted archive path %s\r\n", path->string);
+				//wprintf(L"[ArchiveHook] Intercepted archive path %s\r\n", path->string);
 
 				// See if this is already cached
 				bool isOverridden = gCachePaths ? (overrideSet.find(path->string) != overrideSet.end()) : false;
@@ -310,7 +310,7 @@ DWORD64 ReplaceFileLoadPath(DLString *path)
 							working[i] = L'\\';
 						}
 					}
-					wprintf(L"[ArchiveHook] Looking for override file %s\r\n", working);
+					//wprintf(L"[ArchiveHook] Looking for override file %s\r\n", working);
 					if (GetFileAttributesW(working) != INVALID_FILE_ATTRIBUTES)
 					{
 						overr = true;
@@ -351,7 +351,9 @@ LPVOID GetArchiveFunctionAddress()
 	DSGame game = GetGameType();
 	if (game == GAME_DARKSOULS_3)
 	{
-		return (LPVOID)0x14007d5e0;
+		unsigned short scanBytes[14] = { 0x40, 0x53, 0x55, 0x56, 0x41, 0x54, 0x41, 0x56, 0x48, 0x83, 0xec, 0x20, 0x49, 0x8b };
+		return AOBScanner::GetSingleton()->Scan(scanBytes, 14);
+		//return (LPVOID)0x14007d5e0;
 	}
 	else if (game == GAME_SEKIRO)
 	{

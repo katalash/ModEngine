@@ -192,7 +192,7 @@ BOOL InitInstance(HMODULE hModule)
 		throw(0xDEAD0001);
 
 	// Only hook steamapi on Sekiro
-	if (GetGameType() == GAME_SEKIRO || GetGameType() == GAME_DARKSOULS_REMASTERED)
+	if (GetGameType() == GAME_SEKIRO || GetGameType() == GAME_DARKSOULS_REMASTERED || GetGameType() == GAME_DARKSOULS_3)
 	{
 		auto steamApiHwnd = GetModuleHandleW(L"steam_api64.dll");
 		auto initAddr = GetProcAddress(steamApiHwnd, "SteamAPI_Init");

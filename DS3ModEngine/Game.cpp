@@ -2,5 +2,5 @@
 
 DSGame GetGameType()
 {
-	return GAME_DARKSOULS_REMASTERED;
+	return GAME_DARKSOULS_3;
 }
