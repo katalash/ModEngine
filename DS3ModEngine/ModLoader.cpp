@@ -9,8 +9,11 @@
 #pragma comment(lib, "shlwapi.lib")
 
 extern bool gDebugLog;
+bool logFileAccesses = true;
 
 typedef void*(*VIRTUALTOARCHIVEPATH)(DLString*, UINT64, UINT64, DLString*, UINT64, UINT64);
+
+typedef void* (*VIRTUALTOARCHIVEPATHSOTFS)(LPVOID, DLString*);
 
 typedef void*(*FUCKSEKIRO)(SekiroString*, UINT64, UINT64, DLString*, UINT64, UINT64);
 
@@ -22,6 +25,7 @@ typedef UINT64(*LOADFILE)(LPVOID, UINT64);
 
 // Pointer for calling original function
 VIRTUALTOARCHIVEPATH fpVirtualToArchivePath = NULL;
+VIRTUALTOARCHIVEPATHSOTFS fpVirtualToArchivePathSotfs = NULL;
 FUCKSEKIRO fpFuckSekiro = NULL;
 CREATEFILEW fpCreateFileW = NULL;
 LOADFILE fpLoadFile = NULL;
@@ -38,6 +42,12 @@ void* tVirtualToArchivePath(DLString *path, UINT64 p2, UINT64 p3, DLString *p4, 
 {
 	void *res = fpVirtualToArchivePath(path, p2, p3, p4, p5, p6);
 	return (void*)ReplaceFileLoadPath((DLString*)res);
+}
+
+void* tVirtualToArchivePathSotfs(LPVOID p1, DLString* path)
+{
+	ReplaceFileLoadPath((DLString*)path);
+	return fpVirtualToArchivePathSotfs(p1, path);
 }
 
 void* tFuckSekiro(SekiroString *path, UINT64 p2, UINT64 p3, DLString *p4, UINT64 p5, UINT64 p6)
@@ -175,7 +185,7 @@ UINT64 tLoadFile(LPVOID arg1, UINT64 arg2)
 				if (gameDirSlash != NULL && gameDirSlash != path)
 				{
 					// We likely have a game directory path. Attempt to find override files
-					if (gDebugLog)
+					if (gDebugLog && logFileAccesses)
 					{
 						wprintf(L"[FileHook] Intercepted game file path %s\r\n", path);
 					}
@@ -191,7 +201,7 @@ UINT64 tLoadFile(LPVOID arg1, UINT64 arg2)
 						*capacity = newlen;
 						*string = orpath;
 
-						if (gDebugLog)
+						if (gDebugLog && logFileAccesses)
 						{
 							wprintf(L"[FileHook] Overriding with %s\r\n", orpath);
 						}
@@ -210,62 +220,73 @@ UINT64 tLoadFile(LPVOID arg1, UINT64 arg2)
 	return fpLoadFile(arg1, arg2);
 }
 
+bool CheckFile(DLString* path, int base)
+{
+	wchar_t working[MAX_PATH];
+	if (gDebugLog && logFileAccesses)
+	{
+		wprintf(L"[ArchiveHook] Intercepted archive path %s\r\n", path->string);
+	}
+
+	// See if this is already cached
+	bool isOverridden = gCachePaths ? (overrideSet.find(path->string) != overrideSet.end()) : false;
+	bool isArchived = gCachePaths ? (archiveSet.find(path->string) != archiveSet.end()) : false;
+	bool overr = isOverridden;
+
+	// Not cached
+	if (!isOverridden && !isArchived)
+	{
+		//wchar_t *working = (wchar_t*)malloc(1024);
+		GetCurrentDirectoryW(MAX_PATH, working);
+		if (gUseModOverride && !gLoadUXMFiles)
+		{
+			lstrcpynW(working + lstrlenW(working), gModDir, lstrlenW(gModDir) + 1);
+		}
+		lstrcpynW(working + lstrlenW(working), &path->string[base], path->length - (base - 1));
+		for (int i = 0; i < lstrlenW(working); i++)
+		{
+			if (working[i] == L'/')
+			{
+				working[i] = L'\\';
+			}
+		}
+		if (gDebugLog && logFileAccesses)
+		{
+			wprintf(L"[ArchiveHook] Looking for override file %s\r\n", working);
+		}
+		if (GetFileAttributesW(working) != INVALID_FILE_ATTRIBUTES)
+		{
+			overr = true;
+			if (gCachePaths)
+				overrideSet.insert(path->string);
+			if (gDebugLog && logFileAccesses)
+			{
+				wprintf(L"[ArchiveHook] Adding override for %s\r\n", working);
+			}
+		}
+		else
+		{
+			if (gCachePaths)
+				archiveSet.insert(path->string);
+		}
+		//free(working);
+	}
+	return overr;
+}
+
 DWORD64 ReplaceFileLoadPath(DLString *path)
 {
 	// Patch to load loose files
 	wchar_t working[MAX_PATH];
+	/*if (path != nullptr && path->capacity > 7)
+	{
+		wprintf(L"[DEEEEEBUUUUG] Blah thing %s\r\n", path->string);
+	}*/
 	if (path->capacity > 7 && path->length >= 6)
 	{
 		if (path->string[0] == L'd' && path->string[1] == L'a' && path->string[2] == L't' && path->string[3] == L'a')
 		{
-			if (gDebugLog)
-			{
-				wprintf(L"[ArchiveHook] Intercepted archive path %s\r\n", path->string);
-			}
-
-			// See if this is already cached
-			bool isOverridden = gCachePaths ? (overrideSet.find(path->string) != overrideSet.end()) : false;
-			bool isArchived = gCachePaths ? (archiveSet.find(path->string) != archiveSet.end()) : false;
-			bool overr = isOverridden;
-
-			// Not cached
-			if (!isOverridden && !isArchived)
-			{
-				//wchar_t *working = (wchar_t*)malloc(1024);
-				GetCurrentDirectoryW(MAX_PATH, working);
-				if (gUseModOverride && !gLoadUXMFiles)
-				{
-					lstrcpynW(working + lstrlenW(working), gModDir, lstrlenW(gModDir) + 1);
-				}
-				lstrcpynW(working + lstrlenW(working), &path->string[6], path->length - 5);
-				for (int i = 0; i < lstrlenW(working); i++)
-				{
-					if (working[i] == L'/')
-					{
-						working[i] = L'\\';
-					}
-				}
-				if (gDebugLog)
-				{
-					wprintf(L"[ArchiveHook] Looking for override file %s\r\n", working);
-				}
-				if (GetFileAttributesW(working) != INVALID_FILE_ATTRIBUTES)
-				{
-					overr = true;
-					if (gCachePaths)
-						overrideSet.insert(path->string);
-					if (gDebugLog)
-					{
-						wprintf(L"[ArchiveHook] Adding override for %s\r\n", working);
-					}
-				}
-				else
-				{
-					if (gCachePaths)
-						archiveSet.insert(path->string);
-				}
-				//free(working);
-			}
+			bool overr = CheckFile(path, 6);
 
 			if (overr)
 			{
@@ -275,56 +296,39 @@ DWORD64 ReplaceFileLoadPath(DLString *path)
 				path->string[3] = L'/';
 				path->string[4] = L'/';
 				path->string[5] = L'/';
-				if (gDebugLog)
+				if (gDebugLog && logFileAccesses)
 				{
 					wprintf(L"[ArchiveHook] Path is now %s\r\n", path->string);
 				}
 			}
+			return (DWORD64)path;
 		}
-
+		if (path->length >= 9)
+		{
+			if (path->string[0] == L'g' && path->string[1] == L'a' && path->string[2] == L'm' && path->string[3] == L'e' && path->string[4] == L'd' && path->string[5] == L'a' && path->string[6] == L't' && path->string[7] == L'a')
+			{
+				bool overr = CheckFile(path, 9);
+				if (overr)
+				{
+					path->string[0] = L'.';
+					path->string[1] = L'/';
+					path->string[2] = L'/';
+					path->string[3] = L'/';
+					path->string[4] = L'/';
+					path->string[5] = L'/';
+					path->string[6] = L'/';
+					path->string[7] = L'/';
+					path->string[8] = L'/';
+					path->string[9] = L'/';
+				}
+				return (DWORD64)path;
+			}
+		}
 		if (path->length >= 10)
 		{
 			if (path->string[0] == L'g' && path->string[1] == L'a' && path->string[2] == L'm' && path->string[3] == L'e' && path->string[4] == L'_')
 			{
-				//wprintf(L"[ArchiveHook] Intercepted archive path %s\r\n", path->string);
-
-				// See if this is already cached
-				bool isOverridden = gCachePaths ? (overrideSet.find(path->string) != overrideSet.end()) : false;
-				bool isArchived = gCachePaths ? (archiveSet.find(path->string) != archiveSet.end()) : false;
-				bool overr = isOverridden;
-
-				// Not cached
-				if (!isOverridden && !isArchived)
-				{
-					//wchar_t *working = (wchar_t*)malloc(1024);
-					GetCurrentDirectoryW(MAX_PATH, working);
-					if (gUseModOverride && !gLoadUXMFiles)
-					{
-						lstrcpynW(working + lstrlenW(working), gModDir, lstrlenW(gModDir) + 1);
-					}
-					lstrcpynW(working + lstrlenW(working), &path->string[6], path->length - 5);
-					for (int i = 0; i < lstrlenW(working); i++)
-					{
-						if (working[i] == L'/')
-						{
-							working[i] = L'\\';
-						}
-					}
-					//wprintf(L"[ArchiveHook] Looking for override file %s\r\n", working);
-					if (GetFileAttributesW(working) != INVALID_FILE_ATTRIBUTES)
-					{
-						overr = true;
-						if (gCachePaths)
-							overrideSet.insert(path->string);
-						wprintf(L"[ArchiveHook] Adding override for %s\r\n", working);
-					}
-					else
-					{
-						if (gCachePaths)
-							archiveSet.insert(path->string);
-					}
-					//free(working);
-				}
+				bool overr = CheckFile(path, 10);
 
 				if (overr)
 				{
@@ -339,6 +343,7 @@ DWORD64 ReplaceFileLoadPath(DLString *path)
 					path->string[8] = L'/';
 					path->string[9] = L'/';
 				}
+				return (DWORD64)path;
 			}
 		}
 	}
@@ -361,6 +366,14 @@ LPVOID GetArchiveFunctionAddress()
 		//return (LPVOID)0x1401c5d80;
 		unsigned short scanBytes[14] = {0x40, 0x55, 0x56, 0x41, 0x54, 0x41, 0x55, 0x48, 0x83, 0xec, 0x28, 0x4d, 0x8b, 0xe0};
 		return AOBScanner::GetSingleton()->Scan(scanBytes, 14);
+	}
+	else if (game == GAME_DARKSOULS_2_SOTFS)
+	{
+		//return (LPVOID)0x7ff6014d5050;
+		unsigned short scanBytes[40] = { 0x41, 0x54, 0x41, 0x56, 0x41, 0x57, 0x48, 0x83, 0xec, 0x40, 0x48, 0xc7, 0x44, 0x24,
+										 0x20, 0xfe, 0xff, 0xff, 0xff, 0x48, 0x89, 0x5c, 0x24, 0x60, 0x48, 0x89, 0x6c, 0x24,
+		                                 0x68, 0x48, 0x89, 0x74, 0x24, 0x70, 0x48, 0x89, 0x7c, 0x24, 0x78, 0x48};
+		return AOBScanner::GetSingleton()->Scan(scanBytes, 40);
 	}
 	return NULL;
 }
@@ -396,6 +409,14 @@ BOOL HookModLoader(bool loadUXMFiles, bool useModOverride, bool cachePaths, wcha
 		if (GetGameType() == GAME_SEKIRO)
 		{
 			if (MH_CreateHook(hookAddress, &tFuckSekiro, reinterpret_cast<LPVOID*>(&fpFuckSekiro)) != MH_OK)
+				return false;
+
+			if (MH_EnableHook(hookAddress) != MH_OK)
+				return false;
+		}
+		else if (GetGameType() == GAME_DARKSOULS_2_SOTFS)
+		{
+			if (MH_CreateHook(hookAddress, &tVirtualToArchivePathSotfs, reinterpret_cast<LPVOID*>(&fpVirtualToArchivePathSotfs)) != MH_OK)
 				return false;
 
 			if (MH_EnableHook(hookAddress) != MH_OK)

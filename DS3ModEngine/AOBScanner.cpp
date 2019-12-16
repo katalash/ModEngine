@@ -53,7 +53,7 @@ void* AOBScanner::Scan(unsigned short aob[], int numberOfBytes)
 	for (auto meminfo : mMemoryList)
 	{
 		// Only scan exe memory
-		if (((UINT64)meminfo.BaseAddress & 0xFFFFFFFFF0000000) != (UINT64)mBaseOffset)
+		if (((UINT64)meminfo.BaseAddress & 0xFFFFFFFF00000000) != ((UINT64)mBaseOffset & 0xFFFFFFFF00000000))
 		{
 			continue;
 		}

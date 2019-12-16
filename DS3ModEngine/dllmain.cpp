@@ -65,7 +65,6 @@ BOOL CheckSekiroVersion()
 
 BOOL ApplyHooks()
 {
-	bool blockNetworkAccess = (GetPrivateProfileIntW(L"online", L"blockNetworkAccess", 1, L".\\modengine.ini") == 1);
 	bool saveFilePatch = (GetPrivateProfileIntW(L"savefile", L"useAlternateSaveFile", 1, L".\\modengine.ini") == 1);
 	bool looseParamsPatch = (GetPrivateProfileIntW(L"files", L"loadLooseParams", 0, L".\\modengine.ini") == 1);
 	bool loadUXMFiles = (GetPrivateProfileIntW(L"files", L"loadUXMFiles", 0, L".\\modengine.ini") == 1);
@@ -79,7 +78,7 @@ BOOL ApplyHooks()
 	}
 
 	// Bypass HideThreadFromDebugger
-	if (GetGameType() == GAME_DARKSOULS_3 && !BypassHideThreadFromDebugger())
+	if ((GetGameType() == GAME_DARKSOULS_3 || GetGameType() == GAME_DARKSOULS_2_SOTFS) && !BypassHideThreadFromDebugger())
 		throw(0xDEAD0002);
 
 	// Bypass AssemblyValidation
@@ -89,13 +88,6 @@ BOOL ApplyHooks()
 	// Patch for loose params
 	if (!LooseParamsPatch(saveFilePatch, looseParamsPatch))
 		throw(0xDEAD0003);
-
-	// Block network access
-	if (GetGameType() != GAME_SEKIRO && blockNetworkAccess)
-	{
-		if (!BlockNetworkConnection())
-			throw(0xDEAD0003);
-	}
 
 	// Mod loader
 	if (!HookModLoader(loadUXMFiles, useModOverride, cachePaths, modOverrideDirectory))
@@ -117,6 +109,7 @@ BOOL ApplyHooks()
 
 	if (!ApplyMiscPatches())
 		throw(0xDEAD0004);
+
 
 	return true;
 }
@@ -143,6 +136,14 @@ DWORD64 __cdecl onSteamInit()
 		int temp;
 		std::cin.ignore();
 		FreeConsole();
+	}
+
+	bool startupBreak = (GetPrivateProfileIntW(L"debug", L"breakOnStart", 0, L".\\modengine.ini") == 1);
+	if (startupBreak)
+	{
+		printf("Startup attach point.\r\n\r\nPress any key to continue...");
+		int temp;
+		std::cin.ignore();
 	}
 
 	ApplyHooks();
@@ -191,8 +192,16 @@ BOOL InitInstance(HMODULE hModule)
 	if (MH_Initialize() != MH_OK)
 		throw(0xDEAD0001);
 
+	// Do early hook of WSA stuff
+	bool blockNetworkAccess = (GetPrivateProfileIntW(L"online", L"blockNetworkAccess", 1, L".\\modengine.ini") == 1);
+	if (GetGameType() != GAME_SEKIRO && blockNetworkAccess)
+	{
+		if (!BlockNetworkConnection())
+			throw(0xDEAD0003);
+	}
+
 	// Only hook steamapi on Sekiro
-	if (GetGameType() == GAME_SEKIRO || GetGameType() == GAME_DARKSOULS_REMASTERED || GetGameType() == GAME_DARKSOULS_3)
+	if (GetGameType() == GAME_SEKIRO || GetGameType() == GAME_DARKSOULS_REMASTERED || GetGameType() == GAME_DARKSOULS_3 || GetGameType() == GAME_DARKSOULS_2_SOTFS)
 	{
 		auto steamApiHwnd = GetModuleHandleW(L"steam_api64.dll");
 		auto initAddr = GetProcAddress(steamApiHwnd, "SteamAPI_Init");
@@ -204,6 +213,15 @@ BOOL InitInstance(HMODULE hModule)
 		// Just call our would-be steam hook directly since exe isn't Steam DRM protected
 		onSteamInit();
 	}
+
+	// DS2 light params. Lighting is done here since directional shadow map is initialized super early
+	int dirRes = GetPrivateProfileIntW(L"rendering", L"directionalShadowResolution", 4096, L".\\modengine.ini") / 2;
+	int atlasRes = GetPrivateProfileIntW(L"rendering", L"dynamicAtlasShadowResolution", 2048, L".\\modengine.ini") / 2;
+	int pointRes = GetPrivateProfileIntW(L"rendering", L"dynamicPointShadowResolution", 512, L".\\modengine.ini") / 2;
+	int spotRes = GetPrivateProfileIntW(L"rendering", L"dynamicSpotShadowResolution", 1024, L".\\modengine.ini") / 2;
+
+	if (GetGameType() == GAME_DARKSOULS_2_SOTFS && !ApplyShadowMapResolutionPatches(dirRes, atlasRes, pointRes, spotRes))
+		throw(0xDEAD0004);
 
     return true;
 }
@@ -220,6 +238,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 		AllocConsole();
 		FILE *stream;
 		freopen_s(&stream, "CONOUT$", "w", stdout);
+		freopen_s(&stream, "CONIN$", "r", stdin);
 		gDebugLog = true;
 	}
 

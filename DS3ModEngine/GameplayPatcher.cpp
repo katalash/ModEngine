@@ -85,6 +85,32 @@ void* tMSBHitConstructor(LPVOID p1, LPVOID p2, LPVOID p3, LPVOID p4, char p5)
 	return hit;
 }
 
+
+typedef void* (*MEMORYALLOCATE)(UINT32, UINT32, LPVOID);
+MEMORYALLOCATE fpMemoryAllocate = NULL;
+void* tMemoryAllocate(UINT32 size, UINT32 unk, LPVOID allocator)
+{
+	LPVOID ret = fpMemoryAllocate(size, unk, allocator);
+	if (ret == NULL)
+	{
+		wprintf(L"[Allocator] Allocation of size %d with allocator at %#p\r\n", size, allocator);
+		wprintf(L"[Allocator] Allocation failed\r\n");
+	}
+	return ret;
+}
+
+BOOL ApplyAllocationTracer()
+{
+	if (GetGameType() == GAME_DARKSOULS_2_SOTFS)
+	{
+		if (MH_CreateHook((LPVOID)0x14082bdc0, &tMemoryAllocate, reinterpret_cast<LPVOID*>(&fpMemoryAllocate)) != MH_OK)
+			return false;
+
+		if (MH_EnableHook((LPVOID)0x14082bdc0) != MH_OK)
+			return false;
+	}
+}
+
 BOOL ApplyMiscPatches()
 {
 	bool noLogo = (GetPrivateProfileIntW(L"misc", L"skipLogos", 1, L".\\modengine.ini") == 1);
@@ -118,5 +144,57 @@ BOOL ApplyMiscPatches()
 			return false;
 	}
 
+	ApplyAllocationTracer();
+
 	return true;
+}
+
+BOOL ApplyShadowMapResolutionPatches(int dirSize, int atlasSize, int pointSize, int spotSize)
+{
+	DWORD oldProtect;
+	if (GetGameType() == GAME_DARKSOULS_2_SOTFS)
+	{
+		// 0x1404ac3ed
+		unsigned short aobDir[27] =   { 0xc7, 0x44, 0x24, 0x28, 0x00, 0x08, 0x00, 0x00, 0x48,
+									    0x89, 0x44, 0x24, 0x30, 0x48, 0x8b, 0x47, 0x40, 0xc7,
+									    0x44, 0x24, 0x2C, 0x00, 0x08, 0x00, 0x00, 0x48, 0x89 };
+
+		// 0x140b96e30
+		unsigned short aobPoint[27] = { 0xC7, 0x01, 0x00, 0x02, 0x00, 0x00, 0xC7, 0x41, 0x04,
+									    0x02, 0x00, 0x00, 0x00, 0xC7, 0x41, 0x08, 0x04, 0x00,
+									    0x00, 0x00, 0xC7, 0x41, 0x0C, 0x06, 0x00, 0x00, 0x00};
+
+		char *addressDir = (char*)AOBScanner::GetSingleton()->Scan(aobDir, 27);
+		if (addressDir != NULL)
+		{
+			wprintf(L"[ModEngine] Patching directional shadow resolution of %d to %#p\r\n", dirSize, addressDir);
+			if (!VirtualProtect((LPVOID)addressDir, 30, PAGE_READWRITE, &oldProtect))
+				return false;
+			// Patch hardcoded mov instructions with new resolution
+			memcpy(&addressDir[4],  &dirSize, 4);
+			memcpy(&addressDir[21], &dirSize, 4);
+			VirtualProtect((LPVOID)addressDir, 30, oldProtect, &oldProtect);
+		}
+		else
+		{
+			wprintf(L"[ModEngine] AOB scan failed to find directional shadow resolution\r\n");
+		}
+
+		char* addressPoint = (char*)AOBScanner::GetSingleton()->Scan(aobPoint, 27);
+		if (addressPoint != NULL)
+		{
+			wprintf(L"[ModEngine] Patching dynamic shadow resolution of (atlas: %d, point: %d, spot: %d) to %#p\r\n", atlasSize, pointSize, spotSize, addressPoint);
+			if (!VirtualProtect((LPVOID)addressPoint, 30, PAGE_READWRITE, &oldProtect))
+				return false;
+			// Patch hardcoded mov instructions with new resolution
+			memcpy(&addressPoint[2], &spotSize, 4);
+			memcpy(&addressPoint[37], &pointSize, 4);
+			memcpy(&addressPoint[72], &atlasSize, 4);
+			VirtualProtect((LPVOID)addressPoint, 30, oldProtect, &oldProtect);
+		}
+		else
+		{
+			wprintf(L"[ModEngine] AOB scan failed to find dynamic shadow resolution\r\n");
+		}
+	}
 }
