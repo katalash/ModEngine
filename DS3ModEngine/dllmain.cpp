@@ -1,5 +1,6 @@
 #include "dllmain.h"
 #include "Game.h"
+#include "d3d11hook.h"
 #include <iostream>
 #include <strsafe.h>
 
@@ -231,6 +232,24 @@ BOOL ExitInstance()
     return true;
 }
 
+const LPCWSTR AppWindowTitle = L"DARK SOULS III"; // Targeted D11 Application Window Title.
+
+DWORD WINAPI MainThread(HMODULE hModule)
+{
+	//Sleep(1000);
+	while (FindWindowW(0, AppWindowTitle) == NULL)
+	{
+
+	}
+	bool s = ImplHookDX11_Init(hModule, FindWindowW(0, AppWindowTitle));
+	if (!s)
+	{
+		wprintf(L"Hooking failed\n");
+	}
+
+	return S_OK;
+}
+
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
 	if (GetPrivateProfileIntW(L"debug", L"showDebugLog", 0, L".\\modengine.ini") == 1)
@@ -245,8 +264,9 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls(hModule);
+        //DisableThreadLibraryCalls(hModule);
         InitInstance(hModule);
+		CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)MainThread, hModule, NULL, NULL);
         break;
     case DLL_PROCESS_DETACH:
         ExitInstance();

@@ -9,7 +9,7 @@
 #pragma comment(lib, "shlwapi.lib")
 
 extern bool gDebugLog;
-bool logFileAccesses = true;
+bool logFileAccesses = false;
 
 typedef void*(*VIRTUALTOARCHIVEPATH)(DLString*, UINT64, UINT64, DLString*, UINT64, UINT64);
 

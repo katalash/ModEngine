@@ -144,7 +144,8 @@ BOOL ApplyMiscPatches()
 			return false;
 	}
 
-	ApplyAllocationTracer();
+	//ApplyAllocationTracer();
+	//ApplyFModHooks();
 
 	return true;
 }
@@ -196,5 +197,31 @@ BOOL ApplyShadowMapResolutionPatches(int dirSize, int atlasSize, int pointSize, 
 		{
 			wprintf(L"[ModEngine] AOB scan failed to find dynamic shadow resolution\r\n");
 		}
+	}
+}
+
+typedef void* (*FMODMEMORYALLOCATE)(UINT32, UINT32, LPVOID);
+FMODMEMORYALLOCATE fpFmodMemoryAllocate = NULL;
+void* tFmodMemoryAllocate(UINT32 size, UINT32 unk, LPVOID allocator)
+{
+	LPVOID ret = fpFmodMemoryAllocate(size, unk, allocator);
+	wprintf(L"[Allocator] FMOD Allocation of size %d with typet %d\r\n", size, unk);
+	if (ret == NULL)
+	{
+		wprintf(L"[Allocator] FMOD Allocation failed\r\n");
+		while (1) {}
+	}
+	return ret;
+}
+
+BOOL ApplyFModHooks()
+{
+	if (GetGameType() == GAME_DARKSOULS_3)
+	{
+		if (MH_CreateHook((LPVOID)0x141a4bfd0, &tFmodMemoryAllocate, reinterpret_cast<LPVOID*>(&fpFmodMemoryAllocate)) != MH_OK)
+			return false;
+
+		if (MH_EnableHook((LPVOID)0x141a4bfd0) != MH_OK)
+			return false;
 	}
 }

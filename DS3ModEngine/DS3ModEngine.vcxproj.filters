@@ -34,6 +34,12 @@
     <Filter Include="Source Files\GameplayPatcher">
       <UniqueIdentifier>{dbdb977e-8118-48a5-b597-f4b8f6a4e811}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ImGuiHook">
+      <UniqueIdentifier>{67ddc4c0-414c-442d-8a63-deb4e4491eff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ImGui">
+      <UniqueIdentifier>{37216c3c-b9c9-4a36-b95b-6f54d2dcf622}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dinput8\dinput.h">
@@ -90,6 +96,39 @@
     <ClInclude Include="AOBScanner.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="ImGui\imconfig.h">
+      <Filter>Source Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui.h">
+      <Filter>Source Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui_internal.h">
+      <Filter>Source Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\stb_rect_pack.h">
+      <Filter>Source Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\stb_textedit.h">
+      <Filter>Source Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\stb_truetype.h">
+      <Filter>Source Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="d3d11hook.h">
+      <Filter>Source Files\ImGuiHook</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_impl_dx11.h">
+      <Filter>Source Files\ImGuiHook</Filter>
+    </ClInclude>
+    <ClInclude Include="InputHook.h">
+      <Filter>Source Files\ImGuiHook</Filter>
+    </ClInclude>
+    <ClInclude Include="Menu.h">
+      <Filter>Source Files\ImGuiHook</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Source Files\ImGuiHook</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dinput8\dinput8.def">
@@ -138,6 +177,30 @@
     </ClCompile>
     <ClCompile Include="AOBScanner.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_demo.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_draw.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="d3d11hook.cpp">
+      <Filter>Source Files\ImGuiHook</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_impl_dx11.cpp">
+      <Filter>Source Files\ImGuiHook</Filter>
+    </ClCompile>
+    <ClCompile Include="InputHook.cpp">
+      <Filter>Source Files\ImGuiHook</Filter>
+    </ClCompile>
+    <ClCompile Include="Menu.cpp">
+      <Filter>Source Files\ImGuiHook</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files\ImGuiHook</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -116,18 +116,28 @@
       <OptimizeReferences>true</OptimizeReferences>
       <ModuleDefinitionFile>dinput8\dinput8.def</ModuleDefinitionFile>
       <ProgramDatabaseFile />
-      <AdditionalDependencies>shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shell32.lib;d3d11.lib;d3dcompiler.lib;dxgi.lib;imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AOBScanner.h" />
+    <ClInclude Include="d3d11hook.h" />
     <ClInclude Include="dinput8\dinput.h" />
     <ClInclude Include="dinput8\dinputWrapper.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameplayPatcher.h" />
     <ClInclude Include="HideThreadFromDebugger.h" />
+    <ClInclude Include="ImGui\imconfig.h" />
+    <ClInclude Include="ImGui\imgui.h" />
+    <ClInclude Include="ImGui\imgui_internal.h" />
+    <ClInclude Include="ImGui\stb_rect_pack.h" />
+    <ClInclude Include="ImGui\stb_textedit.h" />
+    <ClInclude Include="ImGui\stb_truetype.h" />
+    <ClInclude Include="imgui_impl_dx11.h" />
+    <ClInclude Include="InputHook.h" />
     <ClInclude Include="LooseParams.h" />
+    <ClInclude Include="Menu.h" />
     <ClInclude Include="MinHook\include\MinHook.h" />
     <ClInclude Include="MinHook\src\buffer.h" />
     <ClInclude Include="MinHook\src\HDE\hde32.h" />
@@ -138,18 +148,26 @@
     <ClInclude Include="MinHook\src\trampoline.h" />
     <ClInclude Include="ModLoader.h" />
     <ClInclude Include="NetworkBlocker.h" />
+    <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dinput8\dinput8.def" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AOBScanner.cpp" />
+    <ClCompile Include="d3d11hook.cpp" />
     <ClCompile Include="dinput8\dinputWrapper.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameplayPatcher.cpp" />
     <ClCompile Include="HideThreadFromDebugger.cpp" />
+    <ClCompile Include="ImGui\imgui.cpp" />
+    <ClCompile Include="ImGui\imgui_demo.cpp" />
+    <ClCompile Include="ImGui\imgui_draw.cpp" />
+    <ClCompile Include="imgui_impl_dx11.cpp" />
+    <ClCompile Include="InputHook.cpp" />
     <ClCompile Include="LooseParams.cpp" />
+    <ClCompile Include="Menu.cpp" />
     <ClCompile Include="MinHook\src\buffer.c" />
     <ClCompile Include="MinHook\src\HDE\hde32.c" />
     <ClCompile Include="MinHook\src\HDE\hde64.c" />
@@ -157,6 +175,7 @@
     <ClCompile Include="MinHook\src\trampoline.c" />
     <ClCompile Include="ModLoader.cpp" />
     <ClCompile Include="NetworkBlocker.cpp" />
+    <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="_VirtualToArchivePathHook.asm" />

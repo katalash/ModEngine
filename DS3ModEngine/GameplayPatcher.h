@@ -7,3 +7,5 @@ BOOL ApplyGameplayPatches();
 BOOL ApplyMiscPatches();
 
 BOOL ApplyShadowMapResolutionPatches(int dirSize, int atlasSize, int pointSize, int spotSize);
+
+BOOL ApplyFModHooks();
