@@ -1,6 +1,7 @@
 #include "ModLoader.h"
 #include "Game.h"
 #include "AOBScanner.h"
+#include "LeoSpecial/LeoSpecial.h"
 #include <stdio.h>
 #include <wchar.h>
 #include <Shlwapi.h>
@@ -9,7 +10,7 @@
 #pragma comment(lib, "shlwapi.lib")
 
 extern bool gDebugLog;
-bool logFileAccesses = false;
+bool logFileAccesses = true;
 
 typedef void*(*VIRTUALTOARCHIVEPATH)(DLString*, UINT64, UINT64, DLString*, UINT64, UINT64);
 
@@ -38,9 +39,14 @@ concurrency::concurrent_unordered_set<std::wstring> overrideSet;
 // Cached set of files that don't have an override and should be loaded from archives
 concurrency::concurrent_unordered_set<std::wstring> archiveSet;
 
+uintptr_t ArchiveVEHHookAddress = NULL;
+LeoHook ArchiveVEHHook;
+
 void* tVirtualToArchivePath(DLString *path, UINT64 p2, UINT64 p3, DLString *p4, UINT64 p5, UINT64 p6)
 {
+	//ArchiveVEHHook.Unhook();
 	void *res = fpVirtualToArchivePath(path, p2, p3, p4, p5, p6);
+	//ArchiveVEHHook.Hook((uintptr_t)ArchiveVEHHookAddress, (uintptr_t)tVirtualToArchivePath);
 	return (void*)ReplaceFileLoadPath((DLString*)res);
 }
 
@@ -429,6 +435,9 @@ BOOL HookModLoader(bool loadUXMFiles, bool useModOverride, bool cachePaths, wcha
 
 			if (MH_EnableHook(hookAddress) != MH_OK)
 				return false;
+			//ArchiveVEHHookAddress = (uintptr_t)hookAddress;
+			//fpVirtualToArchivePath = (VIRTUALTOARCHIVEPATH)hookAddress;
+			//ArchiveVEHHook.Hook((uintptr_t)hookAddress, (uintptr_t)tVirtualToArchivePath);
 		}
 	}
 

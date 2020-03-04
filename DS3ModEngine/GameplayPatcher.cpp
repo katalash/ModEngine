@@ -99,6 +99,26 @@ void* tMemoryAllocate(UINT32 size, UINT32 unk, LPVOID allocator)
 	return ret;
 }
 
+BOOL gPatchedAllocatorLimits = false;
+
+typedef HANDLE(WINAPI* VIRTUALALLOC)(LPVOID, SIZE_T, DWORD, DWORD);
+VIRTUALALLOC fpVirtualAlloc = NULL;
+LPVOID tVirtualAlloc(
+	LPVOID lpAddress,
+	SIZE_T dwSize,
+	DWORD  flAllocationType,
+	DWORD  flProtect
+)
+{
+	if (!gPatchedAllocatorLimits)
+	{
+		ApplyDS3SekiroAllocatorLimitPatch();
+		//onSteamInit();
+		gPatchedAllocatorLimits = true;
+	}
+	return fpVirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect);
+}
+
 BOOL ApplyAllocationTracer()
 {
 	if (GetGameType() == GAME_DARKSOULS_2_SOTFS)
@@ -146,6 +166,7 @@ BOOL ApplyMiscPatches()
 
 	//ApplyAllocationTracer();
 	//ApplyFModHooks();
+	ApplyDS3SekiroAllocatorLimitPatch();
 
 	return true;
 }
@@ -224,4 +245,49 @@ BOOL ApplyFModHooks()
 		if (MH_EnableHook((LPVOID)0x141a4bfd0) != MH_OK)
 			return false;
 	}
+}
+
+BOOL ApplyDS3SekiroAllocatorLimitPatch()
+{
+	DWORD oldProtect;
+	if (GetGameType() == GAME_DARKSOULS_3 || GetGameType() == GAME_SEKIRO)
+	{
+		// Find limit table
+		unsigned short table[56] =  { 0x00, 0x00, 0x00, 0x60, 0x00, 0x00, 0x00, 0x00,
+									  0x00, 0x00, 0x00, 0x60, 0x00, 0x00, 0x00, 0x00,
+									  0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00,
+									  0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00,
+									  0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00,
+									  0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00,
+									  0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00 };
+		uint64_t* tablePtr = (uint64_t*)AOBScanner::GetSingleton()->Scan(table, 56);
+		if (tablePtr != NULL)
+		{
+			wprintf(L"[ModEngine] Patching memory limit table at %#p\r\n", tablePtr);
+			if (!VirtualProtect((LPVOID)tablePtr, 0x100, PAGE_READWRITE, &oldProtect))
+				return false;
+			// FMod allocator limit
+			tablePtr[9] = tablePtr[9] * 3;
+			tablePtr[10] = tablePtr[10] * 3;
+			VirtualProtect((LPVOID)tablePtr, 0x100, oldProtect, &oldProtect);
+		}
+		else
+		{
+			wprintf(L"[ModEngine] Could not find allocation limit table\r\n");
+			return false;
+		}
+		return true;
+	}
+}
+
+BOOL ApplyAllocatorLimitPatchVA()
+{
+	wprintf(L"[ModEngine] Hooking VirtualAlloc\r\n");
+	if (MH_CreateHookApi(L"kernel32", "VirtualAlloc", &tVirtualAlloc, reinterpret_cast<LPVOID*>(&fpVirtualAlloc)) != MH_OK)
+		return false;
+
+	if (MH_EnableHook((LPVOID)GetProcAddress(GetModuleHandleW(L"kernel32"), "VirtualAlloc")) != MH_OK)
+		return false;
+
+	return true;
 }

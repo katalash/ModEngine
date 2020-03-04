@@ -13,7 +13,7 @@ BOOL LooseParamsPatch(bool saveLocationPatch, bool looseParamPatch)
 
 	DWORD oldProtect;
 
-	if (saveLocationPatch)
+	if (saveLocationPatch && GetGameType() != GAME_SEKIRO)
 	{
 		wprintf(L"[ModEngine] Patching save file location\r\n");
 		// Dumb save file location patch

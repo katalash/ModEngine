@@ -40,6 +40,9 @@
     <Filter Include="Source Files\ImGui">
       <UniqueIdentifier>{37216c3c-b9c9-4a36-b95b-6f54d2dcf622}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\StackWalker">
+      <UniqueIdentifier>{c413b239-df4e-491b-a4ab-9b43b5379d9d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dinput8\dinput.h">
@@ -129,6 +132,9 @@
     <ClInclude Include="stdafx.h">
       <Filter>Source Files\ImGuiHook</Filter>
     </ClInclude>
+    <ClInclude Include="StackWalker\StackWalker.h">
+      <Filter>Source Files\StackWalker</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dinput8\dinput8.def">
@@ -201,6 +207,9 @@
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files\ImGuiHook</Filter>
+    </ClCompile>
+    <ClCompile Include="StackWalker\StackWalker.cpp">
+      <Filter>Source Files\StackWalker</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
